@@ -69,11 +69,32 @@ $TranscriptFile = $env:TEMP + '\' + $iso8601 + '_CFacmeCreateDNS.txt'
 #-------------[Execution]------------------------------------------------------
  
 Start-Transcript -Path $TranscriptFile
- 
+
 <# Pseudocode
  
 Logic, flow, etc.
- 
+
+Connect-CFClientAPI [-APIToken] <String> [-EmailAddress] <String>
+Get-CFZoneID -Zone 'contoso.com'
+Add-CFDNSRecord [[-ZoneID] <String>] [-RecordType] <CFDNSRecordType> [-Name] <String> [-Content] <String> [[-TTL] <Int32>] [[-Proxied] <CFDNSOrangeCloudMode>]
+Get-CFDNSRecord [[-ZoneID] <String>] [[-ID] <String>] [[-RecordType] <CFDNSRecordType>] [[-Name] <String>] [[-PerPage] <Int32>] [[-Order] <String>] [[-Direction] <String>] [[-MatchScope] <String>]
 End Pseudocode #>
 
+# Get the ZoneID from the domain and TLD. 
+$pattern = '^.*\.(.*\..*)$'
+$DNSZone = $Hostname -split $pattern
+$DNSZoneID = Get-CFZoneID -Zone $DNSZone
+
+# Add the DNS Record
+Add-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name -Content $Content
+
+# Verify the DNS Record
+$result = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
+# Not 100% sure what this returns. 
+if ($result -eq $Content) {
+    Write-Host "All good"
+} else {
+    Write-Host "Error: result does not match."
+    Write-Host $result
+}
 Stop-Transcript
