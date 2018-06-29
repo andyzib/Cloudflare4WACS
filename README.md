@@ -16,3 +16,16 @@ Install-Module PSCloudflare
 # Wiki
 
 # Support
+
+# WACS Requirments
+Script
+
+    Run external program/script to create and update records.
+    One create script should be provided that accepts three parameters.
+        Hostname that's being validated
+        Name of the TXT record to create
+        Content of the TXT record to create
+    One delete script should be provided that accepts two parameters.
+        Hostname that's being validated
+        Name of the TXT record to delete
+    Unattended --validationmode dns-01 --dnscreatescript C:\create-dns.bat --dnsdeletescript C:\delete-dns.bat --validation dnsscript
