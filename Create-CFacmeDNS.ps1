@@ -80,21 +80,37 @@ Add-CFDNSRecord [[-ZoneID] <String>] [-RecordType] <CFDNSRecordType> [-Name] <St
 Get-CFDNSRecord [[-ZoneID] <String>] [[-ID] <String>] [[-RecordType] <CFDNSRecordType>] [[-Name] <String>] [[-PerPage] <Int32>] [[-Order] <String>] [[-Direction] <String>] [[-MatchScope] <String>]
 End Pseudocode #>
 
+# Import Credentials. 
+$cfcred = Decrypt-CredXML
+
+# Connect to CloudFlare
+$cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.Email
+
 # Get the ZoneID from the domain and TLD. 
 $pattern = '^.*\.(.*\..*)$'
 $DNSZone = $Hostname -split $pattern
 $DNSZoneID = Get-CFZoneID -Zone $DNSZone
 
 # Add the DNS Record
-Add-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name -Content $Content
+$result1 = Add-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name -Content $Content
 
 # Verify the DNS Record
-$result = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
+$result2 = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
 # Not 100% sure what this returns. 
-if ($result -eq $Content) {
+if ($result2 -eq $Content) {
     Write-Host "All good"
 } else {
     Write-Host "Error: result does not match."
     Write-Host $result
 }
+Write-Host "Added DNS Record"
+Write-Host "DNSZone: $DNSZone"
+Write-Host "DNSZoneID: $DNSZoneID"
+Write-Host "Record Name: $Name"
+Write-Host "Hostname: $Hostname"
+Write-Host "Add-CFDNSRecord Result:"
+$result1
+Write-Host "Get-CFDNSRecord Result:" 
+$result2
+
 Stop-Transcript

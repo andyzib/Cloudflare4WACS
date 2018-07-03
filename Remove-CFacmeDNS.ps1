@@ -74,6 +74,12 @@ Get-CFDNSRecord [[-ZoneID] <String>] [[-ID] <String>] [[-RecordType] <CFDNSRecor
 Remove-CFDNSRecord [[-ZoneID] <String>] [-ID] <String>
 End Pseudocode #>
 
+# Import Credentials. 
+$cfcred = Decrypt-CredXML
+
+# Connect to CloudFlare
+$cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.Email
+
 # Get the ZoneID from the domain and TLD. 
 $pattern = '^.*\.(.*\..*)$'
 $DNSZone = $Hostname -split $pattern
@@ -82,6 +88,15 @@ $DNSZoneID = Get-CFZoneID -Zone $DNSZone
 # Get the record. 
 $result = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
 
-Remove-CFDNSRecord -ZoneID $DNSZoneID -ID $result.ID
+$result2 = Remove-CFDNSRecord -ZoneID $DNSZoneID -ID $result.ID
 
+Write-Host "Removed DNS Record:"
+Write-Host "DNSZone: $DNSZone"
+Write-Host "DNSZoneID: $DNSZoneID"
+Write-Host "Record Name: $Name"
+Write-Host "Hostname: $Hostname"
+Write-Host "Get-CFDNSRecord Result:" 
+$result
+Write-Host "Remove-CFDNSRecord Result:"
+$result2
 Stop-Transcript
