@@ -1,0 +1,1 @@
+c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File C:\letsencrypt\Cloudflare4WACS\Remove-CFacmeDNS.ps1 %*

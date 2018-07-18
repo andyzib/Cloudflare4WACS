@@ -7,13 +7,16 @@ A set of scripts to perform the DNS-01 challenge using Cloudflare and WACS.
 # Requirments
 Install-Module PSCloudflare
 
+Cloudflare has deprecated TLS 1.0 and 1.1. Edit the PSCloudflare module to add [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 before Invoke-RestMethod. See [Pull Request #2](https://github.com/zloeber/PSCloudflare/pull/2). 
+
 # Setup
 Run Create-CFXMLCredFile.ps1 to create a XML file holding your encrypted Cloudflare credentials. 
 
 # Running
 Scripts should be called by the WACS client. 
 
-letsenrypt.exe --validationmode dns-01 --validation dnsscript --dnscreatescript Cloudflare4WinAcme\Create-CFacmeDNS.ps1 --dnsdeletescript Cloudflare4WinAcme\Remove-CFacmeDNS.ps1
+letsenrypt.exe --test --validationmode dns-01 --validation dnsscript --dnscreatescript C:\letsenrypt\Cloudflare4WACS\Cloudflare-Create.bat --dnsdeletescript C:\letsencrypt\Cloudflare4WACS\Cloudflare-Remove.bat --plugin manual --manualhost something.example.com
+(Remove --test after successfully testing your Let's Encrypt setup.)
 
 # Support
 None offered. 
