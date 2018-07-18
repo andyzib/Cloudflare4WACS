@@ -43,7 +43,10 @@ Param (
 )
 
 #-------------[Initializations]------------------------------------------------
- 
+
+# Cloudflare Requires TLS 1.2 
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 #Set Error Action to Silently Continue
 #$ErrorActionPreference = "SilentlyContinue"
 Import-Module pscloudflare -ErrorAction Stop
@@ -55,14 +58,17 @@ $iso8601 = Get-Date -Format s
 # Colon (:) isn't a valid character in file names.
 $iso8601 = $iso8601.Replace(":","_")
 # Transcript File
-$TranscriptFile = $env:TEMP + '\' + $iso8601 + '_CFacmeCreateDNS.txt'
+$TranscriptFile = $env:TEMP + '\' + $iso8601 + '_CFacmeRemoveDNS.txt'
  
 #-------------[Functions]------------------------------------------------------
-. $PSRoot + '\Decrypt-CredXML.ps1' 
+. $($PsScriptRoot + '\Decrypt-CredXML.ps1')
  
 #-------------[Execution]------------------------------------------------------
  
 Start-Transcript -Path $TranscriptFile
+
+Write-Host "Hostname: $Hostname"
+Write-Host "Name: $Name"
  
 <# Pseudocode
  
@@ -75,7 +81,7 @@ Remove-CFDNSRecord [[-ZoneID] <String>] [-ID] <String>
 End Pseudocode #>
 
 # Import Credentials. 
-$cfcred = Decrypt-CredXML
+$cfcred = Decrypt-CredXML -CredFile $($PsScriptRoot + '\Cloudflare.xml')
 
 # Connect to CloudFlare
 $cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.Email
@@ -83,7 +89,8 @@ $cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.
 # Get the ZoneID from the domain and TLD. 
 $pattern = '^.*\.(.*\..*)$'
 $DNSZone = $Hostname -split $pattern
-$DNSZoneID = Get-CFZoneID -Zone $DNSZone
+Write-Host "DNSZone: $($DNSZone[1])"
+$DNSZoneID = Get-CFZoneID -Zone $DNSZone[1]
 
 # Get the record. 
 $result = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
@@ -91,12 +98,12 @@ $result = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
 $result2 = Remove-CFDNSRecord -ZoneID $DNSZoneID -ID $result.ID
 
 Write-Host "Removed DNS Record:"
-Write-Host "DNSZone: $DNSZone"
+Write-Host "DNSZone: $($DNSZone[1])"
 Write-Host "DNSZoneID: $DNSZoneID"
 Write-Host "Record Name: $Name"
 Write-Host "Hostname: $Hostname"
 Write-Host "Get-CFDNSRecord Result:" 
-$result
+Write-Host $result
 Write-Host "Remove-CFDNSRecord Result:"
-$result2
+Write-Host $result2
 Stop-Transcript

@@ -49,6 +49,9 @@ Param (
 )
 
 #-------------[Initializations]------------------------------------------------
+
+# Cloudflare Requires TLS 1.2 
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
  
 #Set Error Action to Silently Continue
 #$ErrorActionPreference = "SilentlyContinue"
@@ -64,11 +67,15 @@ $iso8601 = $iso8601.Replace(":","_")
 $TranscriptFile = $env:TEMP + '\' + $iso8601 + '_CFacmeCreateDNS.txt'
  
 #-------------[Functions]------------------------------------------------------
-. $PSRoot + '\Decrypt-CredXML.ps1' 
+. $($PsScriptRoot + '\Decrypt-CredXML.ps1')
  
 #-------------[Execution]------------------------------------------------------
  
 Start-Transcript -Path $TranscriptFile
+
+Write-Host "Parameter Hostname: $Hostname"
+Write-Host "Parameter Name: $Name"
+Write-Host "Parameter Content: $Content"
 
 <# Pseudocode
  
@@ -81,7 +88,7 @@ Get-CFDNSRecord [[-ZoneID] <String>] [[-ID] <String>] [[-RecordType] <CFDNSRecor
 End Pseudocode #>
 
 # Import Credentials. 
-$cfcred = Decrypt-CredXML
+$cfcred = Decrypt-CredXML -CredFile $($PsScriptRoot + '\Cloudflare.xml')
 
 # Connect to CloudFlare
 $cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.Email
@@ -89,7 +96,8 @@ $cloudflare = Connect-CFClientAPI -APIToken $cfcred.Token -EmailAddress $cfcred.
 # Get the ZoneID from the domain and TLD. 
 $pattern = '^.*\.(.*\..*)$'
 $DNSZone = $Hostname -split $pattern
-$DNSZoneID = Get-CFZoneID -Zone $DNSZone
+Write-Host "DNSZone: $($DNSZone[1])"
+$DNSZoneID = Get-CFZoneID -Zone $DNSZone[1]
 
 # Add the DNS Record
 $result1 = Add-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name -Content $Content
@@ -97,20 +105,22 @@ $result1 = Add-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name -Conte
 # Verify the DNS Record
 $result2 = Get-CFDNSRecord -ZoneID $DNSZoneID -RecordType TXT -Name $Name
 # Not 100% sure what this returns. 
-if ($result2 -eq $Content) {
+if ($result2.content -eq $Content) {
     Write-Host "All good"
 } else {
     Write-Host "Error: result does not match."
-    Write-Host $result
+    Write-Host $result2
 }
 Write-Host "Added DNS Record"
-Write-Host "DNSZone: $DNSZone"
+Write-Host "DNSZone: $($DNSZone[1])"
 Write-Host "DNSZoneID: $DNSZoneID"
 Write-Host "Record Name: $Name"
 Write-Host "Hostname: $Hostname"
 Write-Host "Add-CFDNSRecord Result:"
-$result1
+Write-Host $result1
 Write-Host "Get-CFDNSRecord Result:" 
-$result2
-
+Write-Host $result2
+Write-Host "Sleeping 60 seconds for DNS records to propagate."
+Start-Sleep -Seconds 60
+Write-Host "Complete." 
 Stop-Transcript
