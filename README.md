@@ -15,7 +15,7 @@ Run Create-CFXMLCredFile.ps1 to create a XML file holding your encrypted Cloudfl
 # Running
 Scripts should be called by the WACS client. 
 
-letsenrypt.exe --test --validationmode dns-01 --validation dnsscript --dnscreatescript C:\letsenrypt\Cloudflare4WACS\Cloudflare-Create.bat --dnsdeletescript C:\letsencrypt\Cloudflare4WACS\Cloudflare-Remove.bat --plugin manual --manualhost something.example.com
+letsencrypt.exe --test --validationmode dns-01 --validation dnsscript --dnscreatescript C:\letsenrypt\Cloudflare4WACS\Cloudflare-Create.bat --dnsdeletescript C:\letsencrypt\Cloudflare4WACS\Cloudflare-Remove.bat --plugin manual --manualhost something.example.com
 (Remove --test after successfully testing your Let's Encrypt setup.)
 
 # Support
